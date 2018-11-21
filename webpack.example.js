@@ -17,7 +17,7 @@ module.exports = merge(dev, {
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-          <title>FlashCards</title>
+          <title>FP Flicker</title>
         </head>
         <body>
         </body>
