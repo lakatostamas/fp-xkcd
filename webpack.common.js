@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    flashcards: path.join(__dirname, 'src', 'index.js'),
+    "fpflicker": path.join(__dirname, 'src', 'index.js'),
   },
 
   resolve: {
