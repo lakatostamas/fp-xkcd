@@ -1,10 +1,12 @@
 import { compose, curry, map, prop } from 'ramda';
+import { task, of } from 'folktale/concurrency/task';
+import axios from 'axios';
 
 const Impure = {
-  getJSON: curry((resolve, reject, url) => fetch(url)
-    .then(data => data.json())
-    .then(resolve)
-    .catch(reject)),
+  get: url => task(resolver => axios.get(url)
+    .then(resolver.resolve)
+    .catch(resolver.reject)
+  ).run(),
   setHtml: curry((sel, html) => document.querySelector(sel).innerHTML = html),
   addEventListener: curry((sel, event, listener) => document.querySelector(sel).addEventListener(event, listener)),
   trace: log => console.log(log),
@@ -12,16 +14,22 @@ const Impure = {
 
 const apiUrl = 'https://xkcd.now.sh/';
 const buildImageTag = src => `<img src=${src} />`;
-const dataToImage = compose(buildImageTag, prop('img'));
-const render = compose(Impure.setHtml('.image-container'), dataToImage);
-const renderErrorMessage = Impure.trace;
-const transformTextToUrl = number => `${apiUrl}${number}`;
+const dataToImage = compose(buildImageTag, prop('img'), prop('data'));
+const renderImage = compose(Impure.setHtml('.result-container'), dataToImage);
+const renderErrorMessage = compose(Impure.setHtml('.result-container'), prop('message'))
+const transformTextToUrl = pattern => `${apiUrl}${pattern}`;
+const extractPattern = compose(prop('value'), prop('target'));
+
+const renderResult = runContext => runContext.listen({
+  onRejected: renderErrorMessage,
+  onResolved: renderImage,
+});
 
 const getData = compose(
-  Impure.getJSON(render, renderErrorMessage),
+  renderResult,
+  Impure.get,
   transformTextToUrl,
-  prop('value'),
-  prop('target'),
+  extractPattern,
 );
 const addListenerToInput = Impure.addEventListener('[name="search-pattern"]');
 
